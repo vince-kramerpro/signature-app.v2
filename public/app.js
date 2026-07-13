@@ -153,20 +153,24 @@ async function publish(user, { name, title, phone }) {
     website: WEBSITE_URL,
     websiteLabel: WEBSITE_LABEL,
     bg: LOCKED_BRAND.bg,
-    text: LOCKED_BRAND.text,
-    mapId: `${user.uid}-${version}`
+    text: LOCKED_BRAND.text
   };
   const image = await buildCompositeSignature(data, {
     logoSrc: LOGO_ASSET_URL,
     wordmarkSrc: WORDMARK_ASSET_URL
   });
-  const blob = await signatureToBlob(image.canvas);
-  const path = `signatures/${user.uid}/${image.filename}`;
-  await uploadBytes(ref(storage, path), blob, {
-    contentType: "image/png",
-    cacheControl: "public,max-age=31536000"
-  });
-  const imageUrl = publicUrl(path, version);
+  const assets = [image, ...image.tiles];
+  const imageEntries = await Promise.all(assets.map(async (asset) => {
+    const blob = await signatureToBlob(asset.canvas);
+    const path = `signatures/${user.uid}/${asset.filename}`;
+    await uploadBytes(ref(storage, path), blob, {
+      contentType: "image/png",
+      cacheControl: "public,max-age=31536000"
+    });
+    return [asset.key, publicUrl(path, version)];
+  }));
+  const imageUrls = Object.fromEntries(imageEntries);
+  const imageUrl = imageUrls.signature;
 
   await setDoc(doc(db, "signatures", user.uid), {
     uid: user.uid,
@@ -177,13 +181,13 @@ async function publish(user, { name, title, phone }) {
     website: WEBSITE_URL,
     slug: slugify(name),
     imageUrl,
-    images: { signature: imageUrl },
+    images: imageUrls,
     imageVersion: version,
-    renderMode: "single-image-map",
+    renderMode: "opaque-linked-tiles",
     updatedAt: serverTimestamp()
   }, { merge: true });
 
-  return buildHostedSignature(image, imageUrl);
+  return buildHostedSignature(image, imageUrls);
 }
 
 // ---- result / copy ----
@@ -199,14 +203,14 @@ el("editBtn").addEventListener("click", () => {
 
 el("copyBtn").addEventListener("click", async () => {
   if (copyRichHtml(lastHtml)) {
-    toast("Signature copied — now paste it into Gmail.");
+    toast("Signature copied — paste it into your email signature settings.");
     return;
   }
   try {
     await navigator.clipboard.write([
       new ClipboardItem({ "text/html": new Blob([lastHtml], { type: "text/html" }) })
     ]);
-    toast("Signature copied — now paste it into Gmail.");
+    toast("Signature copied — paste it into your email signature settings.");
   } catch (e) {
     toast("Couldn't copy automatically. Select the signature above and copy it manually.");
   }

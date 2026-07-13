@@ -8,9 +8,9 @@ Self-service email signature publishing for Kramer Pro employees.
 - Employee signature form and branded preview
 - Published signature image storage in Firebase Storage
 - Per-user publication records in Firestore
-- Copy-to-Gmail workflow
+- Copy-to-email-client workflow
 - Opaque branded rendering designed to resist email-client dark-mode recoloring
-- Clickable email, phone, and website regions
+- Clickable email, phone, and website columns using ordinary linked images
 
 ## Firebase services
 

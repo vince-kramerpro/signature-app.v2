@@ -1,10 +1,10 @@
 // Kramer Pro signature renderer.
 //
-// The entire visible 600 x 280 signature is rendered into one opaque PNG. That
-// keeps every brand pixel out of reach of email-client dark-mode transforms and
-// removes the HTML-background boxes seen in Outlook. Independent contact links
-// are supplied by a standard HTML image map; this must still be validated after
-// Gmail saves the pasted signature and in the real client matrix.
+// The entire visible 600 x 280 signature is rendered into one opaque canvas,
+// then cropped into three full-height, edge-to-edge PNG tiles. Each tile uses a
+// normal <a><img></a> link. This keeps every brand pixel out of reach of email-
+// client dark-mode transforms while avoiding image maps, which Gmail removes
+// when a pasted signature is saved.
 
 export const SIGNATURE_WIDTH = 600;
 export const SIGNATURE_HEIGHT = 280;
@@ -26,10 +26,18 @@ const WORDMARK_Y = 189;
 const WORDMARK_WIDTH = 520;
 
 const CONTACTS = {
-  email: { x: 32, width: 210, hitX1: 32, hitX2: 252, label: 'Email Address' },
-  phone: { x: 252, width: 166, hitX1: 252, hitX2: 428, label: 'Phone Number' },
-  website: { x: 428, width: 140, hitX1: 428, hitX2: 568, label: 'Website' }
+  email: { x: 32, width: 210, label: 'Email Address' },
+  phone: { x: 252, width: 166, label: 'Phone Number' },
+  website: { x: 428, width: 140, label: 'Website' }
 };
+
+// Full-height crops meet exactly at the contact-column boundaries. There are
+// no transparent pixels and no HTML background between them.
+const TILE_SPECS = [
+  { key: 'email', filename: 'signature-email.png', x: 0, width: 252 },
+  { key: 'phone', filename: 'signature-phone.png', x: 252, width: 176 },
+  { key: 'website', filename: 'signature-website.png', x: 428, width: 172 }
+];
 
 function clean(value) {
   return String(value || '').trim();
@@ -62,11 +70,6 @@ function phoneHref(value) {
 
 export function slugify(value) {
   return clean(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'signature';
-}
-
-function safeMapId(value) {
-  const id = clean(value).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
-  return `kramer-${id || 'signature'}`;
 }
 
 function createCanvas() {
@@ -120,37 +123,46 @@ function drawContact(ctx, contact, value) {
   ctx.fillText(value, contact.x, CONTACT_Y + 31);
 }
 
-function buildAreas(data, websiteLabel) {
-  const areas = [];
-  if (data.email) {
-    areas.push({
-      key: 'email',
-      coords: [CONTACTS.email.hitX1, CONTACT_Y - 5, CONTACTS.email.hitX2, CONTACT_Y + 42],
-      href: `mailto:${clean(data.email)}`,
-      alt: `Email ${clean(data.email)}`
-    });
-  }
-  if (data.phone) {
-    areas.push({
-      key: 'phone',
-      coords: [CONTACTS.phone.hitX1, CONTACT_Y - 5, CONTACTS.phone.hitX2, CONTACT_Y + 42],
-      href: phoneHref(data.phone),
-      alt: `Call ${clean(data.phone)}`
-    });
-  }
-  const websiteHref = normalizeUrl(data.website);
-  if (websiteHref) {
-    areas.push({
-      key: 'website',
-      coords: [CONTACTS.website.hitX1, CONTACT_Y - 5, CONTACTS.website.hitX2, CONTACT_Y + 42],
-      href: websiteHref,
-      alt: `Visit ${websiteLabel}`
-    });
-  }
-  return areas.filter((area) => area.href);
+function cropTile(source, spec) {
+  const canvas = document.createElement('canvas');
+  canvas.width = spec.width * SCALE;
+  canvas.height = SIGNATURE_HEIGHT * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(
+    source,
+    spec.x * SCALE,
+    0,
+    spec.width * SCALE,
+    SIGNATURE_HEIGHT * SCALE,
+    0,
+    0,
+    spec.width * SCALE,
+    SIGNATURE_HEIGHT * SCALE
+  );
+  return canvas;
 }
 
-// data: { fullName, jobTitle, email, phone, website, websiteLabel, mapId }
+function buildLinkedTiles(source, data, websiteLabel) {
+  const links = {
+    email: `mailto:${clean(data.email)}`,
+    phone: phoneHref(data.phone),
+    website: normalizeUrl(data.website)
+  };
+  const alts = {
+    email: `${clean(data.fullName)} - ${clean(data.jobTitle)}. Email ${clean(data.email)}.`,
+    phone: `Phone ${clean(data.phone)}.`,
+    website: `Website ${websiteLabel}.`
+  };
+  return TILE_SPECS.map((spec) => ({
+    ...spec,
+    height: SIGNATURE_HEIGHT,
+    canvas: cropTile(source, spec),
+    href: links[spec.key],
+    alt: alts[spec.key]
+  }));
+}
+
+// data: { fullName, jobTitle, email, phone, website, websiteLabel }
 // assets: { logoSrc, wordmarkSrc }
 export async function buildCompositeSignature(data, assets) {
   const [logo, wordmark] = await Promise.all([
@@ -179,30 +191,24 @@ export async function buildCompositeSignature(data, assets) {
     width: SIGNATURE_WIDTH,
     height: SIGNATURE_HEIGHT,
     canvas,
-    mapId: safeMapId(data.mapId || slugify(data.fullName)),
-    areas: buildAreas(data, websiteLabel),
-    alt: `${clean(data.fullName)} — ${clean(data.jobTitle)}. Email: ${clean(data.email)}. Phone: ${clean(data.phone)}. Website: ${websiteLabel}.`
+    tiles: buildLinkedTiles(canvas, data, websiteLabel),
+    alt: `${clean(data.fullName)} - ${clean(data.jobTitle)}. Email: ${clean(data.email)}. Phone: ${clean(data.phone)}. Website: ${websiteLabel}.`
   };
 }
 
-function areaHtml(area) {
-  const coords = area.coords.join(',');
-  const target = /^https?:/i.test(area.href) ? ' target="_blank"' : '';
-  return `<area shape="rect" coords="${coords}" href="${escapeAttr(area.href)}" alt="${escapeAttr(area.alt)}" title="${escapeAttr(area.alt)}"${target}>`;
+function linkedTileHtml(tile, src) {
+  const target = /^https?:/i.test(tile.href) ? ' target="_blank"' : '';
+  return `<td width="${tile.width}" height="${tile.height}" valign="top" style="width:${tile.width}px;height:${tile.height}px;padding:0;margin:0;border:0;font-size:0;line-height:0;mso-line-height-rule:exactly;vertical-align:top;"><a href="${escapeAttr(tile.href)}" title="${escapeAttr(tile.alt)}"${target} style="display:block;width:${tile.width}px;height:${tile.height}px;margin:0;padding:0;border:0;line-height:0;text-decoration:none;"><img src="${escapeAttr(src)}" width="${tile.width}" height="${tile.height}" border="0" alt="${escapeAttr(tile.alt)}" style="display:block;width:${tile.width}px;height:${tile.height}px;margin:0;padding:0;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;"></a></td>`;
 }
 
-// Builds the exact HTML copied into Gmail. The PNG is the only visible layer;
-// no HTML background or live brand text remains for a dark-mode engine to alter.
-export function buildHostedSignature(image, src) {
-  const mapHtml = image.areas.map(areaHtml).join('');
+// Builds the exact HTML copied into email clients. The three ordinary linked
+// images are the only visible layer; no live brand text or HTML background is
+// available for a dark-mode engine to alter.
+export function buildHostedSignature(image, sources) {
+  const cells = image.tiles.map((tile) => linkedTileHtml(tile, sources[tile.key])).join('');
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${image.width}" style="width:${image.width}px;border-collapse:collapse;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
   <tbody>
-    <tr>
-      <td width="${image.width}" style="width:${image.width}px;padding:0;margin:0;font-size:0;line-height:0;">
-        <img src="${escapeAttr(src)}" usemap="#${escapeAttr(image.mapId)}" width="${image.width}" height="${image.height}" alt="${escapeAttr(image.alt)}" style="display:block;width:${image.width}px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;">
-        <map name="${escapeAttr(image.mapId)}" id="${escapeAttr(image.mapId)}">${mapHtml}</map>
-      </td>
-    </tr>
+    <tr>${cells}</tr>
   </tbody>
 </table>`;
 }
