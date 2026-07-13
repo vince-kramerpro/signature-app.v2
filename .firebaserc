@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "kramer-signatures"
+  },
+  "targets": {
+    "kramer-signatures": {
+      "hosting": {
+        "app": [
+          "kramer-pro-signatures"
+        ]
+      }
+    }
   }
 }
