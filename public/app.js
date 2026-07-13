@@ -130,13 +130,13 @@ el("publishForm").addEventListener("submit", async (ev) => {
   const btn = el("publishBtn");
   btn.disabled = true;
   const original = btn.textContent;
-  btn.textContent = "Publishing…";
+  btn.textContent = "Publishing...";
   try {
     const html = await publish(currentUser, { name, title, phone });
     showResult(html);
   } catch (e) {
     console.error(e);
-    toast("Something went wrong while publishing. Please try again.");
+    toast("We could not publish your signature. Please try again.");
   } finally {
     btn.disabled = false;
     btn.textContent = original;
@@ -203,16 +203,16 @@ el("editBtn").addEventListener("click", () => {
 
 el("copyBtn").addEventListener("click", async () => {
   if (copyRichHtml(lastHtml)) {
-    toast("Signature copied — paste it into your email signature settings.");
+    toast("Signature copied. Paste it into your email signature settings.");
     return;
   }
   try {
     await navigator.clipboard.write([
       new ClipboardItem({ "text/html": new Blob([lastHtml], { type: "text/html" }) })
     ]);
-    toast("Signature copied — paste it into your email signature settings.");
+    toast("Signature copied. Paste it into your email signature settings.");
   } catch (e) {
-    toast("Couldn't copy automatically. Select the signature above and copy it manually.");
+    toast("The signature could not be copied automatically. Select the preview and copy it manually.");
   }
 });
 

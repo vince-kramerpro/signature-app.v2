@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Signature images live under signatures/{uid}/. They are PUBLICLY READABLE
-// on purpose — email clients must be able to load them with no login. Writes
+    // on purpose. Email clients must be able to load them with no login. Writes
 // are limited to the signed-in @kramer.pro owner, PNG only, small files.
 service firebase.storage {
   match /b/{bucket}/o {

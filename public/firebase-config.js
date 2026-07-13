@@ -1,5 +1,5 @@
 // Firebase web config for the kramer-signatures project.
-// These values are safe to ship in the browser — access is controlled by the
+// These values are safe to ship in the browser. Access is controlled by the
 // Firestore/Storage security rules, not by hiding these keys.
 export const firebaseConfig = {
   apiKey: "AIzaSyCcalmhOkmtOswtHglz1cj5m9mEc6qUSw0",

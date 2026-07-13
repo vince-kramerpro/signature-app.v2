@@ -18,26 +18,26 @@
     <!-- Loading -->
     <section id="loadingView" class="card center">
       <div class="spinner" aria-hidden="true"></div>
-      <p class="muted">Loading…</p>
+      <p class="muted">Loading...</p>
     </section>
 
     <!-- Login -->
     <section id="loginView" class="card center" hidden>
       <h1>Create your email signature</h1>
-      <p class="muted">Sign in with your Kramer Pro Google account to set up your signature. It works in one minute, no design skills needed.</p>
+      <p class="muted">Sign in with your Kramer Pro Google account to create and manage your company email signature.</p>
       <button id="loginBtn" class="btn btn-primary btn-google" type="button">
         <span class="g-mark">G</span> Sign in with Google
       </button>
-      <p class="fineprint">Use your <strong>@kramer.pro</strong> account. Only Kramer Pro accounts can sign in.</p>
+      <p class="fineprint">Only verified <strong>@kramer.pro</strong> accounts can access this tool.</p>
     </section>
 
     <!-- Form -->
     <section id="formView" class="card" hidden>
       <div class="rowbetween">
-        <h1>Hi <span id="greetName">there</span> 👋</h1>
+        <h1>Welcome, <span id="greetName">there</span></h1>
         <button id="signOutBtn" class="link" type="button">Sign out</button>
       </div>
-      <p class="muted">Fill in your details and publish. You can come back and update them anytime.</p>
+      <p class="muted">Enter your details below. You can return at any time to update your signature.</p>
 
       <form id="publishForm" class="form" autocomplete="off">
         <label>
@@ -47,28 +47,28 @@
         <label>
           Work email
           <input id="emailInput" type="email" readonly>
-          <span class="hint">From your Google sign-in — this is what your email button links to.</span>
+          <span class="hint">This address comes from your Google account and will be used for the email link.</span>
         </label>
         <label>
           Job title
-          <input id="titleInput" type="text" placeholder="e.g. Account Manager" required>
+          <input id="titleInput" type="text" placeholder="Example: Account Manager" required>
         </label>
         <label>
           Phone
-          <input id="phoneInput" type="tel" placeholder="e.g. 405-555-1234" required>
+          <input id="phoneInput" type="tel" placeholder="Example: (405) 555-1234" required>
         </label>
         <label>
           Website
           <input type="text" value="www.kramer.pro" readonly>
         </label>
-        <button id="publishBtn" class="btn btn-primary" type="submit">Publish my signature</button>
+        <button id="publishBtn" class="btn btn-primary" type="submit">Publish signature</button>
       </form>
     </section>
 
     <!-- Result -->
     <section id="resultView" class="card" hidden>
       <div class="rowbetween">
-        <h1>Your signature is ready ✅</h1>
+        <h1>Your signature is ready</h1>
         <button id="signOutBtn2" class="link" type="button">Sign out</button>
       </div>
       <div class="preview-frame">
@@ -79,12 +79,12 @@
         <button id="editBtn" class="btn btn-ghost" type="button">Edit details</button>
       </div>
       <ol class="steps">
-        <li>Click <strong>Copy signature</strong> above.</li>
+        <li>Select <strong>Copy signature</strong>.</li>
         <li>Open your signature settings in Gmail or Outlook.</li>
-        <li>Delete the old signature, paste the new one, and save your changes.</li>
-        <li>Send a test email and verify the email, phone, and website links.</li>
+        <li>Replace your existing signature, paste the new signature, and save your changes.</li>
+        <li>Send a test email and confirm that the email, phone, and website links work.</li>
       </ol>
-      <p class="fineprint">Tip: check it on your phone in dark mode — it should look exactly the same as on desktop.</p>
+      <p class="fineprint">You can return to this page at any time to update and republish your signature.</p>
     </section>
   </main>
 
