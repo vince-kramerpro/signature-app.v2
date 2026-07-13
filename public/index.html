@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kramer Pro Signatures</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="kramer-logo.png" alt="Kramer Pro" class="brand-logo">
+        <span class="brand-name">Kramer Pro Signatures</span>
+      </div>
+    </header>
+
+    <!-- Loading -->
+    <section id="loadingView" class="card center">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="muted">Loading…</p>
+    </section>
+
+    <!-- Login -->
+    <section id="loginView" class="card center" hidden>
+      <h1>Create your email signature</h1>
+      <p class="muted">Sign in with your Kramer Pro Google account to set up your signature. It works in one minute, no design skills needed.</p>
+      <button id="loginBtn" class="btn btn-primary btn-google" type="button">
+        <span class="g-mark">G</span> Sign in with Google
+      </button>
+      <p class="fineprint">Use your <strong>@kramer.pro</strong> account. Only Kramer Pro accounts can sign in.</p>
+    </section>
+
+    <!-- Form -->
+    <section id="formView" class="card" hidden>
+      <div class="rowbetween">
+        <h1>Hi <span id="greetName">there</span> 👋</h1>
+        <button id="signOutBtn" class="link" type="button">Sign out</button>
+      </div>
+      <p class="muted">Fill in your details and publish. You can come back and update them anytime.</p>
+
+      <form id="publishForm" class="form" autocomplete="off">
+        <label>
+          Full name
+          <input id="nameInput" type="text" placeholder="Your full name" required>
+        </label>
+        <label>
+          Work email
+          <input id="emailInput" type="email" readonly>
+          <span class="hint">From your Google sign-in — this is what your email button links to.</span>
+        </label>
+        <label>
+          Job title
+          <input id="titleInput" type="text" placeholder="e.g. Account Manager" required>
+        </label>
+        <label>
+          Phone
+          <input id="phoneInput" type="tel" placeholder="e.g. 405-555-1234" required>
+        </label>
+        <label>
+          Website
+          <input type="text" value="www.kramer.pro" readonly>
+        </label>
+        <button id="publishBtn" class="btn btn-primary" type="submit">Publish my signature</button>
+      </form>
+    </section>
+
+    <!-- Result -->
+    <section id="resultView" class="card" hidden>
+      <div class="rowbetween">
+        <h1>Your signature is ready ✅</h1>
+        <button id="signOutBtn2" class="link" type="button">Sign out</button>
+      </div>
+      <div class="preview-frame">
+        <div id="signaturePreview" class="signature-preview"></div>
+      </div>
+      <div class="actions">
+        <button id="copyBtn" class="btn btn-primary" type="button">Copy to Gmail</button>
+        <button id="editBtn" class="btn btn-ghost" type="button">Edit details</button>
+      </div>
+      <ol class="steps">
+        <li>Click <strong>Copy to Gmail</strong> above.</li>
+        <li>In Gmail: <strong>Settings → See all settings → General → Signature</strong>.</li>
+        <li>Delete any old signature, click <strong>Save Changes</strong>, then reopen Settings.</li>
+        <li>Paste into the signature box and click <strong>Save Changes</strong> at the bottom.</li>
+      </ol>
+      <p class="fineprint">Tip: check it on your phone in dark mode — it should look exactly the same as on desktop.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

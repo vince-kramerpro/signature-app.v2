@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Signature images live under signatures/{uid}/. They are PUBLICLY READABLE
+// on purpose — email clients must be able to load them with no login. Writes
+// are limited to the signed-in @kramer.pro owner, PNG only, small files.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isKramer() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('(?i).*@kramer[.]pro$');
+    }
+
+    match /signatures/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isKramer()
+        && request.auth.uid == uid
+        && request.resource.size < 1 * 1024 * 1024
+        && request.resource.contentType == 'image/png';
+    }
+  }
+}

@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Each employee owns exactly one signature record, keyed by their auth uid.
+// Only signed-in @kramer.pro accounts can read the roster or write, and a
+// person can only write their own record.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isKramer() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('(?i).*@kramer[.]pro$');
+    }
+
+    match /signatures/{uid} {
+      allow read: if isKramer();
+      allow write: if isKramer() && request.auth.uid == uid;
+    }
+  }
+}
